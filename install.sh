@@ -32,7 +32,6 @@ if ! ldconfig -p | grep -q "libncurses5.so"; then
     # Update package lists and install dependencies
     sudo apt update
     sudo apt upgrade -y
-    sudo apt-get install libncurses5 libncurses5:i386 -y
 
     # If the i386 package fails, remove it and install only libncurses5
     if [ $? -ne 0 ]; then
