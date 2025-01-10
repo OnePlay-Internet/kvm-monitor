@@ -43,19 +43,17 @@ def get_vms_with_state():
         logger.debug(traceback.format_exc())
         return []
 
-
 def get_kvm_stats():
     try:
         output = subprocess.check_output(
-            ['sudo', '-S', 'kvmtop', '--cpu', '--mem', '--disk', '--net', '--io', '--host',
-             '--printer=json', '--runs=1'], input=f'{os.getenv("ROOT_PASS")}\n', text=True)
+            ['sudo', 'kvmtop', '--cpu', '--mem', '--disk', '--net', '--io', '--host',
+             '--printer=json', '--runs=1'], text=True)
         if output and output.startswith('{ "'):
             data = ujson.loads(output)
             return data
     except Exception as e:
         logger.debug(traceback.format_exc())
     return {}
-
 
 def sync_data_to_influx_db(data):
     try:

@@ -1,11 +1,8 @@
 import os
 import socket
 import subprocess
-
 import ujson
-
 from modules import logger
-
 
 def get_nvme_disk_names():
     try:
@@ -19,14 +16,10 @@ def get_nvme_disk_names():
         logger.debug(f"Error: {e}")
         return []
 
-
 def get_disk_stats(disk_path):
     try:
         output = subprocess.check_output(
-            args=['sudo', '-S', 'smartctl', '-j', '-a', disk_path],
-            input=f'{os.getenv("ROOT_PASS")}\n',
-            universal_newlines=True
-        )
+            ['sudo', 'smartctl', '-j', '-a', disk_path], text=True)
         if output and output.startswith('{ "'):
             data = ujson.loads(output)
             return data
@@ -38,7 +31,6 @@ def get_disk_stats(disk_path):
     except Exception as e:
         logger.debug(str(e))
     return {}
-
 
 def get_smartctl_data(disk_path):
 

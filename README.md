@@ -45,7 +45,6 @@ Note: If you got stuck with the above error then, remove `libncurses5:i386` and 
     INFLUX_TOKEN="your-influxdb-token"
     INFLUX_ORG="your-influxdb-organization"
     INFLUX_BUCKET="your-influxdb-bucket"
-    ROOT_PASS="user-passof-ubuntu-terminal"
     DISK_PATH="disk-path-to-be-monitored"
     ```
 2. Run the script:
