@@ -3,6 +3,13 @@
 # Exit on any error
 set -e
 
+if [ "$(id -u)" -ne 0 ]; then
+    echo "You are NOT root. Please run this script as root."
+    exit 1
+fi
+
+cd /root 2>/dev/null
+
 # kvmtop installation
 echo "Installing kvmtop..."
 

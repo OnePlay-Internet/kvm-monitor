@@ -3,8 +3,8 @@ Description=Libvirt Monitoring Service
 After=network.target
 
 [Service]
-ExecStart=/root/libmon/env/bin/python3 /root/libmon/main.py
-WorkingDirectory=/root/libmon
+ExecStart=/root/kvm-monitor/env/bin/python3 /root/kvm-monitor/main.py
+WorkingDirectory=/root/kvm-monitor
 Restart=always
 RestartSec=5
 User=root
