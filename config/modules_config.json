@@ -1,0 +1,10 @@
+{
+    "modules": [
+        {"name": "uptime", "interval_seconds": 30},
+        {"name": "disk", "interval_seconds": 30},
+        {"name": "partition", "interval_seconds": 30},
+        {"name": "sensors", "interval_seconds": 30},
+        {"name": "kvm_monitor", "interval_seconds": 30},
+        {"name": "network", "interval_seconds": 30}
+    ]
+}

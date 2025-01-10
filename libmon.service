@@ -1,0 +1,14 @@
+[Unit]
+Description=Libvirt Monitoring Service
+After=network.target
+
+[Service]
+ExecStart=/root/libmon/env/bin/python3 /root/libmon/main.py
+WorkingDirectory=/root/libmon
+Restart=always
+RestartSec=5
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
