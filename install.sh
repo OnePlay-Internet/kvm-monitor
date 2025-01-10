@@ -41,7 +41,7 @@ kvmtop --version
 # Clone the kvm-monitor repo and install
 echo "Cloning kvm-monitor repository..."
 
-git clone https://github.com/your-username/kvm-monitor.git
+git clone https://github.com/oneplay-internet/kvm-monitor.git
 cd kvm-monitor
 
 # Copy the service file to systemd
