@@ -3,6 +3,7 @@
 # Exit on any error
 set -e
 
+# Ensure the script is run as root
 if [ "$(id -u)" -ne 0 ]; then
     echo "You are NOT root. Please run this script as root."
     exit 1
@@ -17,76 +18,56 @@ echo "Installing kvmtop..."
 wget https://github.com/cha87de/kvmtop/releases/download/2.1.3/kvmtop_2.1.3_linux_amd64.deb
 
 # Install kvmtop
-sudo dpkg -i kvmtop_2.1.3_linux_amd64.deb
+dpkg -i kvmtop_2.1.3_linux_amd64.deb || true
 
-# Check for missing libncurses5.so and add repositories if necessary
-if ! ldconfig -p | grep -q "libncurses5.so"; then
-    echo "Missing libncurses5.so, adding repositories..."
+# Check and install missing dependencies
+echo "Checking and installing dependencies..."
+echo "deb http://security.ubuntu.com/ubuntu focal-security main" | tee -a /etc/apt/sources.list
+echo "deb http://archive.ubuntu.com/ubuntu/ focal main restricted universe multiverse" | tee -a /etc/apt/sources.list
+echo "deb http://archive.ubuntu.com/ubuntu/ focal-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list
+echo "deb http://security.ubuntu.com/ubuntu/ focal-security main restricted universe multiverse" | tee -a /etc/apt/sources.list
 
-    # Add repositories to /etc/apt/sources.list
-    echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee -a /etc/apt/sources.list
-    echo "deb http://archive.ubuntu.com/ubuntu/ focal main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list
-    echo "deb http://archive.ubuntu.com/ubuntu/ focal-updates main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list
-    echo "deb http://security.ubuntu.com/ubuntu/ focal-security main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list
-
-    # Update package lists and install dependencies
-    sudo apt update
-    sudo apt upgrade -y
-
-    # If the i386 package fails, remove it and install only libncurses5
-    if [ $? -ne 0 ]; then
-        echo "Removing libncurses5:i386 due to installation failure..."
-        sudo apt-get remove libncurses5:i386 -y
-        sudo apt-get install libncurses5 -y
-    fi
-fi
+apt update
+apt upgrade -y
+apt install libncurses5 -y
 
 # Verify kvmtop installation
 kvmtop --version
 
-# Clone the kvm-monitor repo and install
-echo "Cloning kvm-monitor repository..."
-
+# Clone the kvm-monitor repository and set up
+echo "Cloning and setting up kvm-monitor..."
 git clone https://github.com/oneplay-internet/kvm-monitor.git
 cd kvm-monitor
 
 # Copy the service file to systemd
-echo "Setting up kvm-monitor service..."
-sudo cp kvm-monitor.service /etc/systemd/system
+cp kvm-monitor.service /etc/systemd/system
 
-# Prompt for InfluxDB configurations
+# Configure InfluxDB
 echo "Configuring InfluxDB..."
+read -p "Enter your Influx URL: " influx_url
+read -p "Enter your Influx Token: " influx_token
+read -p "Enter your Influx Org: " influx_org
+read -p "Enter your Influx Bucket: " influx_bucket
 
-# Get InfluxDB URL, Token, Org, and Bucket
-printf "Tell me your Influx URL: "
-read influx_url
-echo "INFLUX_URL=$influx_url" >> .env
-
-printf "Tell me your Influx Token: "
-read influx_token
-echo "INFLUX_TOKEN=$influx_token" >> .env
-
-printf "Tell me your Influx Org: "
-read influx_org
-echo "INFLUX_ORG=$influx_org" >> .env
-
-printf "Tell me your Influx Bucket: "
-read influx_bucket
-echo "INFLUX_BUCKET=$influx_bucket" >> .env
-
-# Get the disk path
-echo "Fetching disk path..."
-echo "DISK_PATH=$(fdisk -l | head -n 1 | cut -d' ' -f2 | tr -d ':')" >> .env
+cat <<EOF > .env
+INFLUX_URL=$influx_url
+INFLUX_TOKEN=$influx_token
+INFLUX_ORG=$influx_org
+INFLUX_BUCKET=$influx_bucket
+DISK_PATH=$(fdisk -l | head -n 1 | cut -d' ' -f2 | tr -d ':')
+EOF
 
 # Set up the Python environment
 echo "Setting up Python virtual environment..."
 python3 -m venv env
 source env/bin/activate
-pip3 install -r requirements.txt
+pip install -r requirements.txt
+
+deactivate
 
 # Enable and start the kvm-monitor service
 echo "Enabling and starting kvm-monitor service..."
-sudo systemctl daemon-reload
-sudo systemctl enable --now kvm-monitor.service
+systemctl daemon-reload
+systemctl enable --now kvm-monitor.service
 
 echo "kvm-monitor installed and running!"
