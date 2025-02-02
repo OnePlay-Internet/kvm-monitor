@@ -16,14 +16,39 @@ def get_sensor_data():
     # Parse the JSON output
     sensor_data = json.loads(sensors_output)
 
-    # Extract values into a dictionary
-    return {
-	"host": socket.gethostname(),
-        "disk temp": sensor_data.get("nvme-pci-0100", {}).get("Composite", {}).get("temp1_input"),
-        "cpu tctl": sensor_data.get("k10temp-pci-00c3", {}).get("Tctl", {}).get("temp1_input"),
-        "cpu tccd1": sensor_data.get("k10temp-pci-00c3", {}).get("Tccd1", {}).get("temp3_input"),
-        "cpu tccd2": sensor_data.get("k10temp-pci-00c3", {}).get("Tccd2", {}).get("temp4_input"),
+    response =  {
+        "host": socket.gethostname(),
+        "power_usage_watts": 0,
+        "disk temp": 0,
+        "cpu tctl": 0,
+        "cpu tccd1": 0,
+        "cpu tccd2": 0,
     }
+
+    for k in sensor_data.keys():
+
+        # parse power if any
+        if k.startswith("power_meter"):
+            if sensor_data[k].get("power0", None) is not None:
+                response["power_usage_watts"] = sensor_data[k].get("power0", {}).get("power0_average", 0)
+            else:
+                response["power_usage_watts"] = sensor_data[k].get("power1", {}).get("power1_average", 0)
+        
+        # parse nvme if any
+        elif k.startswith("nvme-pci"):
+            response["disk temp"] = sensor_data[k].get("Composite", {}).get("temp1_input", 0)
+        
+        # parse amd cpu power from cpu 0
+        elif k.startswith("k10temp-pci-00"):
+            response["cpu tctl"] = sensor_data[k].get("Tctl", {}).get("temp1_input", 0)
+            response["cpu tccd1"] = sensor_data[k].get("Tccd1", {}).get("temp3_input", 0)
+            response["cpu tccd2"] = sensor_data[k].get("Tccd2", {}).get("temp4_input", 0)
+
+        # parse cpu power of intel cpu from cpu 0
+        elif k == "coretemp-isa-0000":
+            response["cpu tctl"] = sensor_data[k].get("Package id 0", {}).get("temp1_input", 0)
+
+    return response
 
 
 def collect_data():
